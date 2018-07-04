@@ -918,6 +918,8 @@ class NFe400(NFe310):
                 self.nfe.infNFe.det.append(self.det)
 
             if invoice.journal_id.revenue_expense:
+                self.nfe.infNFe.cobr.fat.vLiq.valor = str(
+                    "%.2f" % invoice.amount_total)
                 for move_line in invoice.move_line_receivable_id:
                     self.dup = self._get_Dup()
                     self._encashment_data(invoice, move_line)
@@ -958,7 +960,8 @@ class NFe400(NFe310):
         # em uma forma de pagto e outra parte em outra
         # ex.: metade em dinheiro e metade boleto
         self.detPag.tPag.valor = invoice.type_nf_payment
-        self.detPag.vPag.valor = invoice.amount_total
+        self.detPag.vPag.valor = str(
+            "%.2f" % invoice.amount_total)
 
     def get_NFe(self):
         try:
