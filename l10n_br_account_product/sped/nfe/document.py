@@ -241,8 +241,7 @@ class NFe200(FiscalDocument):
         self.nfe.infNFe.emit.xNome.valor =\
             invoice.company_id.partner_id.legal_name[:60]
         self.nfe.infNFe.emit.xFant.valor = invoice.company_id.partner_id.name
-        self.nfe.infNFe.emit.enderEmit.xLgr.valor = (normalize(
-            'NFKD', unicode(company.street or '')).encode('ASCII', 'ignore'))
+        self.nfe.infNFe.emit.enderEmit.xLgr.valor = company.street or ''
         self.nfe.infNFe.emit.enderEmit.nro.valor = company.number or ''
         self.nfe.infNFe.emit.enderEmit.xCpl.valor = company.street2 or ''
         self.nfe.infNFe.emit.enderEmit.xBairro.valor =\
@@ -337,9 +336,7 @@ class NFe200(FiscalDocument):
         self.nfe.infNFe.dest.enderDest.xBairro.valor =\
             invoice.partner_id.district or 'Sem Bairro'
         self.nfe.infNFe.dest.enderDest.cMun.valor = address_invoice_city_code
-        self.nfe.infNFe.dest.enderDest.xMun.valor = normalize(
-                    'NFKD', unicode(address_invoice_city or '')
-                    ).encode('ASCII', 'ignore')
+        self.nfe.infNFe.dest.enderDest.xMun.valor = address_invoice_city or ''
         self.nfe.infNFe.dest.enderDest.UF.valor = address_invoice_state_code
         self.nfe.infNFe.dest.enderDest.CEP.valor = partner_cep
         self.nfe.infNFe.dest.enderDest.cPais.valor = partner_bc_code
@@ -594,11 +591,8 @@ class NFe200(FiscalDocument):
                 (invoice.carrier_id.partner_id.street or '') + ', ' +
                 (invoice.carrier_id.partner_id.number or '') + ', ' +
                 (invoice.carrier_id.partner_id.district or ''))[:60]
-            self.nfe.infNFe.transp.transporta.xMun.valor = normalize(
-                'NFKD', unicode(
+            self.nfe.infNFe.transp.transporta.xMun.valor = (
                     invoice.carrier_id.partner_id.l10n_br_city_id.name or '')
-                 ).encode('ASCII', 'ignore')
-
             self.nfe.infNFe.transp.transporta.UF.valor = (
                 invoice.carrier_id.partner_id.state_id.code or '')
 
