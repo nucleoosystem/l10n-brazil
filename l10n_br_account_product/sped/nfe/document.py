@@ -440,8 +440,6 @@ class NFe200(FiscalDocument):
             # Informação do ICMS Interestadual nas vendas para consumidor final
             self.det.imposto.ICMSUFDest.vBCUFDest.valor = str(
                 "%.2f" % invoice_line.icms_dest_base)
-            self.det.imposto.ICMSUFDest.vBCFCPUFDest.valor = str(
-                "%.2f" % invoice_line.icms_dest_base)
             self.det.imposto.ICMSUFDest.pFCPUFDest.valor = str(
                 "%.2f" % invoice_line.icms_fcp_percent)
             self.det.imposto.ICMSUFDest.pICMSUFDest.valor = str(
@@ -851,6 +849,11 @@ class NFe310(NFe200):
 class NFe400(NFe310):
     def __init__(self):
         super(NFe400, self).__init__()
+  
+    def _details(self, invoice, invoice_line, index):          
+        super(NFe400, self)._details(invoice, invoice_line, index)
+        self.det.imposto.ICMSUFDest.vBCFCPUFDest.valor = str(
+            "%.2f" % invoice_line.icms_dest_base)
 
     def _details_pag(self, invoice):
         # TODO - implementar campo
