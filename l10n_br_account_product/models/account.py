@@ -207,7 +207,7 @@ class AccountTax(models.Model):
                            if tx['domain'] == 'cofins']
 
         if id_dest == '3':
-            base_pis_cofins = total_base - ii_value
+            base_pis_cofins = total_base - ii_value - ipi_value
         else:
             base_pis_cofins = result['total']
 
