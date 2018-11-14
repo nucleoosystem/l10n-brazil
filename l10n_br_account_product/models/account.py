@@ -6,6 +6,7 @@ import time
 
 from openerp import models, fields, api
 from openerp.addons import decimal_precision as dp
+from openerp.addons.account import account
 from openerp.tools import DEFAULT_SERVER_DATE_FORMAT
 
 
@@ -34,7 +35,7 @@ class AccountTaxTemplate(models.Model):
         'Tipo Base ICMS ST', required=True, default='4')
     icms_st_perc_limit = fields.Float(
         'Limite para Crédito do ICMS Próprio',
-        digits=dp.get_precision('Account'), default=0.00)
+        digits=account.get_precision_tax(), default=0.00)
 
 
 class AccountTax(models.Model):
@@ -54,7 +55,7 @@ class AccountTax(models.Model):
         'Tipo Base ICMS ST', required=True, default='4')
     icms_st_perc_limit = fields.Float(
         'Limite para Crédito do ICMS Próprio',
-        digits=dp.get_precision('Account'), default=0.00)
+        digits=account.get_precision_tax(), default=0.00)
     icms_st_discount_included = fields.Boolean(
         string=u'Incluir desconto na base de calculo?',
         default=False
