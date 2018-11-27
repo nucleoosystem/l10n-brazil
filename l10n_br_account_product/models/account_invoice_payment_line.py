@@ -8,7 +8,6 @@ from odoo import api, fields, models, _
 
 
 class AccountInvoicePaymentLine(models.Model):
-
     _name = b'account.invoice.payment.line'
     _description = 'Dados de cobrança'
     _order = 'invoice_id, date_due, payment_id'
@@ -16,41 +15,40 @@ class AccountInvoicePaymentLine(models.Model):
 
     payment_id = fields.Many2one(
         comodel_name='account.invoice.payment',
-        string='Pagamento',
-        ondelete='cascade',
-    )
+        string=u'Pagamento',
+        ondelete='cascade')
+
     invoice_id = fields.Many2one(
         comodel_name='account.invoice',
         related='payment_id.invoice_id',
-        store=True,
-    )
+        store=True)
+
     number = fields.Char(
-        string='Número',
+        string=u'Número',
         size=60,
-        readonly=True,
-    )
+        readonly=True)
+
     date_due = fields.Date(
-        string='Data de vencimento',
-        required=True,
-    )
+        string=u'Data de vencimento',
+        required=True)
+
     currency_id = fields.Many2one(
         comodel_name='res.currency',
-        string='Currency',
+        string=u'Currency',
         # related='payment_id.currency_id',
-        store=True,
-    )
+        store=True)
+
     amount_original = fields.Float(
-        string='Vr Original',
+        string=u'Vr Original',
         digits=(18, 2),
-        required=True,
-    )
+        required=True)
+
     amount_discount = fields.Float(
-        string='Vr desconto',
+        string=u'Vr desconto',
         digits=(18, 2),
-        required=True,
-    )
+        required=True)
+
     amount_net = fields.Float(
-        string='Vr Liquido',
+        string=u'Vr Liquido',
         digits=(18, 2),
-        required=True,
-    )
+        required=True)

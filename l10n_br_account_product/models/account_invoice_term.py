@@ -7,16 +7,16 @@ from __future__ import division, print_function, unicode_literals
 from odoo import api, fields, models, _
 
 BANDEIRA_CARTAO = (
-    ('01', 'Visa'),
-    ('02', 'Mastercard'),
-    ('03', 'American Express'),
-    ('04', 'Sorocred'),
-    ('05', 'Diners Club'),
-    ('06', 'Elo'),
-    ('07', 'Hipercard'),
-    ('08', 'Aura'),
-    ('09', 'Cabal'),
-    ('99', 'Outros'),
+    ('01', u'Visa'),
+    ('02', u'Mastercard'),
+    ('03', u'American Express'),
+    ('04', u'Sorocred'),
+    ('05', u'Diners Club'),
+    ('06', u'Elo'),
+    ('07', u'Hipercard'),
+    ('08', u'Aura'),
+    ('09', u'Cabal'),
+    ('99', u'Outros'),
 )
 BANDEIRA_CARTAO_DICT = dict(BANDEIRA_CARTAO)
 
@@ -39,19 +39,19 @@ INTEGRACAO_CARTAO_INTEGRADO = '1'
 INTEGRACAO_CARTAO_NAO_INTEGRADO = '2'
 
 FORMA_PAGAMENTO = (
-    ('01', 'Dinheiro'),
-    ('02', 'Cheque'),
-    ('03', 'Cartão de crédito'),
-    ('04', 'Cartão de débito'),
-    ('05', 'Crédito na loja'),
-    ('10', 'Vale alimentação'),
-    ('11', 'Vale refeição'),
-    ('12', 'Vale presente'),
-    ('13', 'Vale combustível'),
-    ('14', 'Duplicata mercantil'),
-    ('15', 'Boleto bancário'),
-    ('90', 'Sem pagamento'),
-    ('99', 'Outros'),
+    ('01', u'Dinheiro'),
+    ('02', u'Cheque'),
+    ('03', u'Cartão de crédito'),
+    ('04', u'Cartão de débito'),
+    ('05', u'Crédito na loja'),
+    ('10', u'Vale alimentação'),
+    ('11', u'Vale refeição'),
+    ('12', u'Vale presente'),
+    ('13', u'Vale combustível'),
+    ('14', u'Duplicata mercantil'),
+    ('15', u'Boleto bancário'),
+    ('90', u'Sem pagamento'),
+    ('99', u'Outros'),
 )
 
 FORMA_PAGAMENTO_DICT = dict(FORMA_PAGAMENTO)
@@ -76,9 +76,9 @@ FORMA_PAGAMENTO_CARTOES = (
 )
 
 IND_FORMA_PAGAMENTO = (
-    ('0', 'À vista'),
-    ('1', 'A prazo'),
-    ('2', 'Outros/sem pagamento'),
+    ('0', u'À vista'),
+    ('1', u'A prazo'),
+    ('2', u'Outros/sem pagamento'),
 )
 IND_FORMA_PAGAMENTO_DICT = dict(IND_FORMA_PAGAMENTO)
 
@@ -93,37 +93,36 @@ class AccountPaymentTerm(models.Model):
         return super(AccountPaymentTerm, self)._compute_display_name()
 
     display_name = fields.Char(
-        string='Condição da pagamento',
+        string=u'Condição da pagamento',
         store=True,
-        compute='_compute_display_name',
-    )
+        compute='_compute_display_name')
+
     #
     # Campos para NF-e e SPED
     #
     ind_forma_pagamento = fields.Selection(
         selection=IND_FORMA_PAGAMENTO,
-        string='Indicador da Forma de Pagamento',
-    )
+        string=u'Indicador da Forma de Pagamento')
+
     forma_pagamento = fields.Selection(
         selection=FORMA_PAGAMENTO,
-        string='Forma de pagamento',
+        string=u'Forma de pagamento',
         default=FORMA_PAGAMENTO_OUTROS,
-        required=True,
-    )
+        required=True)
+
     card_brand = fields.Selection(
         selection=BANDEIRA_CARTAO,
-        string='Bandeira do cartão',
-    )
+        string=u'Bandeira do cartão')
+
     card_integration = fields.Selection(
         selection=INTEGRACAO_CARTAO,
-        string='Integração do cartão',
-        default=INTEGRACAO_CARTAO_NAO_INTEGRADO,
-    )
+        string=u'Integração do cartão',
+        default=INTEGRACAO_CARTAO_NAO_INTEGRADO)
+
     partner_id = fields.Many2one(
         comodel_name='res.partner',
         string='Operadora do cartão',
-        ondelete='restrict',
-    )
+        ondelete='restrict')
 
     @api.multi
     def name_get(self):

@@ -17,70 +17,69 @@ class AccountInvoicePayment(models.Model):
     _order = 'invoice_id, sequence, payment_term_id'
 
     sequence = fields.Integer(
-        default=10,
-    )
+        default=10)
+
     date = fields.Date(
-        string='Data de referência',
-        readonly=True,
-    )
+        string=u'Data de referência',
+        readonly=True)
+
     payment_term_id = fields.Many2one(
         comodel_name='account.payment.term',
-        string='Condição de pagamento',
+        string=u'Condição de pagamento',
         ondelete='restrict',
-        domain=[('forma_pagamento', '!=', False)],
-    )
+        domain=[('forma_pagamento', '!=', False)])
+
     currency_id = fields.Many2one(
         comodel_name='res.currency',
-        string='Currency',
-    )
+        string='Currency')
+
     amount = fields.Float(
-        string='Amount',
-    )
+        string=u'Amount')
+
     autorizacao = fields.Char(
-        string='Autorização nº',
-        size=20,
-    )
+        string=u'Autorização nº',
+        size=20)
+
     nsu = fields.Char(
         string='NSU',
-        help='Numero sequencial unico',
-    )
+        help=u'Numero sequencial unico')
+
     ind_forma_pagamento = fields.Selection(
         related='payment_term_id.ind_forma_pagamento',
-        store=True,
-    )
+        store=True)
+
     forma_pagamento = fields.Selection(
         related='payment_term_id.forma_pagamento',
-        store=True,
-    )
+        store=True)
+
     card_brand = fields.Selection(
         related='payment_term_id.card_brand',
-        store=True,
-    )
+        store=True)
+
     card_integration = fields.Selection(
         related='payment_term_id.card_integration',
-        store=True,
-    )
+        store=True)
+
     partner_id = fields.Many2one(
         related='payment_term_id.partner_id',
         store=True,
-        ondelete='restrict',
-    )
+        ondelete='restrict')
+
     cnpj_cpf = fields.Char(
-        string='CNPJ/CPF',
+        string=u'CNPJ/CPF',
         size=18,
         related='partner_id.cnpj_cpf',
-        readonly=True,
-    )
+        readonly=True)
+
     invoice_id = fields.Many2one(
         comodel_name='account.invoice',
-        string='Invoice',
-        ondelete='set null',  # Allow use the same model in sale and purchase
-    )
+        string=u'Invoice',
+        ondelete='set null')  # Allow use the same model in sale and purchase
+
     item_ids = fields.One2many(
         comodel_name='account.invoice.payment.line',
         inverse_name='payment_id',
-        string='Duplicatas',
-    )
+        string=u'Duplicatas')
 
     def _set_parent(self, field_parent, field_parent_id):
         date = False
