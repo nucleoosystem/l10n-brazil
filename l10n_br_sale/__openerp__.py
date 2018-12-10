@@ -12,6 +12,7 @@
     'depends': [
         'l10n_br_account',
         'account_fiscal_position_rule_sale',
+        'account_payment_sale'
     ],
     'data': [
         'data/l10n_br_sale_data.xml',
