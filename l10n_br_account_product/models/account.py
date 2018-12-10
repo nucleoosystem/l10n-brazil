@@ -180,6 +180,13 @@ class AccountTax(models.Model):
 
         # Calcula o II
         specific_ii = [tx for tx in result['taxes'] if tx['domain'] == 'ii']
+        # Se for NF-e de importação, retira o II da base de calculo
+        # para calcular outros impostos
+        if specific_ii and id_dest == '3':
+            total_base = round(
+                total_base / (1 + specific_ii[0].get('percent')),
+                precision)
+
         result_ii = self._compute_tax(cr, uid, specific_ii, total_base,
                                       product, quantity, precision, base_tax)
         totaldc += result_ii['tax_discount']

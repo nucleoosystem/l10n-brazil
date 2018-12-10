@@ -1170,8 +1170,8 @@ class AccountInvoiceLine(models.Model):
 
     def _amount_tax_ii(self, tax=None):
         result = {
-            'ii_base': 0.0,
-            'ii_value': 0.0,
+            'ii_base': tax.get('total_base', 0.0),
+            'ii_value': tax.get('amount', 0.0),
         }
         return result
 
