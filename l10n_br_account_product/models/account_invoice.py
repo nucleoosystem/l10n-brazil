@@ -811,7 +811,7 @@ class AccountInvoiceLine(models.Model):
     fiscal_quantity = fields.Float(
         string=u'Quantidade Tributária',
         default=0.00,
-        digits=dp.get_precision('Account')
+        digits=dp.get_precision('Product Unit of Measure')
     )
     fiscal_price_unit = fields.Float(
         string='Preço Unitário Tributável',
