@@ -749,14 +749,23 @@ class AccountInvoice(models.Model):
 
                     if tax.tax_code_id.due_day:
                         now = datetime.now()
+
+                        # FIXME
+                        month = now.month + 1
+                        if month > 12:
+                            next = 1
+                        else:
+                            next = now.month + 1
+
                         if tax.tax_code_id.due_day > now.day:
                             date = datetime(now.year,
                                             now.month,
                                             tax.tax_code_id.due_day)
                         else:
                             date = datetime(now.year,
-                                            now.month + 1,
+                                            next,
                                             tax.tax_code_id.due_day)
+
 
                     retention['date_maturity'] = fields.Date.to_string(date)
                     retentions.append((0, 0, retention))
