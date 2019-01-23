@@ -4,7 +4,7 @@
 
 from __future__ import division, print_function, unicode_literals
 
-from odoo import api, fields, models, _
+from odoo import api, fields, models
 
 from .account_invoice_term import (
     FORMA_PAGAMENTO_SEM_PAGAMENTO,

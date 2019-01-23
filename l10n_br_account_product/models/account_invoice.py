@@ -7,16 +7,13 @@ import datetime
 from odoo import models, fields, api, _, tools
 from odoo.addons import decimal_precision as dp
 from odoo.exceptions import (RedirectWarning,
-                             ValidationError,
                              Warning as UserError)
 
 from .l10n_br_account_product import (
     PRODUCT_FISCAL_TYPE,
     PRODUCT_FISCAL_TYPE_DEFAULT)
 
-from .product_template import PRODUCT_ORIGIN
-from odoo.addons.l10n_br_account_product.sped.nfe.validator import txt
-from .account_invoice_term import FORMA_PAGAMENTO_SEM_PAGAMENTO
+from .l10n_br_account_product.sped.nfe.validator import txt
 
 
 class AccountInvoice(models.Model):
@@ -319,7 +316,7 @@ class AccountInvoice(models.Model):
     nfe_date = fields.Datetime(
         string=u'Data do Status NFE',
         readonly=True,
-       copy=False)
+        copy=False)
 
     nfe_export_date = fields.Datetime(
         string=u'Exportação NFE',
@@ -869,37 +866,49 @@ class AccountInvoice(models.Model):
     @api.multi
     def action_move_create(self):
         """ Creates invoice related analytics and financial move lines """
-        account_invoice_tax = self.env['account.invoice.tax']
         account_move = self.env['account.move']
 
         for inv in self:
             if not inv.journal_id.sequence_id:
-                raise UserError(_('Error!'), _('Please define sequence on the journal related to this invoice.'))
+                raise UserError(_('Error!'), _(
+                    'Please define sequence on the journal'
+                    ' related to this invoice.'))
             if not inv.invoice_line_ids:
-                raise UserError(_('No Invoice Lines!'), _('Please create some invoice lines.'))
+                raise UserError(
+                    _('No Invoice Lines!'),
+                    _('Please create some invoice lines.'))
             if inv.move_id:
                 continue
 
             ctx = dict(self._context, lang=inv.partner_id.lang)
 
             if not inv.date_invoice:
-                inv.with_context(ctx).write({'date_invoice': fields.Date.context_today(self)})
+                inv.with_context(ctx).write({
+                    'date_invoice': fields.Date.context_today(self)
+                })
             date_invoice = inv.date_invoice
 
             company_currency = inv.company_id.currency_id
             # create the analytical lines, one move line per invoice line
             iml = inv.invoice_line_move_line_get()
             # check if taxes are all computed
-            # compute_taxes = account_invoice_tax.compute(inv.with_context(lang=inv.partner_id.lang))
+            # compute_taxes = account_invoice_tax.compute(
+            # inv.with_context(lang=inv.partner_id.lang))
             # inv.check_tax_lines(compute_taxes)
             if any(line.invoice_line_tax_ids for line in
                    inv.invoice_line_ids) and not inv.tax_line_ids:
                 inv.compute_taxes()
-             # I disabled the check_total feature
-            if self.env.user.has_group('account.group_supplier_inv_check_total'):
-                if inv.type in ('in_invoice', 'in_refund') and abs(inv.check_total - inv.amount_total) >= (inv.currency_id.rounding / 2.0):
-                    raise UserError(_('Bad Total!'), _('Please verify the price of the invoice!\nThe encoded total does not match the computed total.'))
-             # if inv.payment_term:
+            # I disabled the check_total feature
+            if self.env.user.has_group(
+                    'account.group_supplier_inv_check_total'):
+                if inv.type in ('in_invoice', 'in_refund') and abs(
+                        inv.check_total - inv.amount_total) >= (
+                        inv.currency_id.rounding / 2.0):
+                    raise UserError(
+                        _('Bad Total!'),
+                        _('Please verify the price of the invoice!\nThe'
+                          ' encoded total does not match the computed total.'))
+            # if inv.payment_term:
             #     total_fixed = total_percent = 0
             #     for line in inv.payment_term.line_ids:
             #         if line.value == 'fixed':
@@ -908,8 +917,14 @@ class AccountInvoice(models.Model):
             #             total_percent += line.value_amount
             #     total_fixed = (total_fixed * 100) / (inv.amount_total or 1.0)
             #     if (total_fixed + total_percent) > 100:
-            #         raise except_orm(_('Error!'), _("Cannot create the invoice.\nThe related payment term is probably misconfigured as it gives a computed amount greater than the total invoiced amount. In order to avoid rounding issues, the latest line of your payment term must be of type 'balance'."))
-             # one move line per tax line
+            #         raise except_orm(
+            # _('Error!'),
+            #  _("Cannot create the invoice.\nThe related payment term is
+            #  probably misconfigured as it gives a computed amount greater
+            #  than the total invoiced amount. In order to avoid rounding
+            # issues, the latest line of your payment
+            #  term must be of type 'balance'."))
+            # one move line per tax line
             iml += inv.tax_line_move_line_get()
 
             if inv.type in ('in_invoice', 'in_refund'):
@@ -918,8 +933,11 @@ class AccountInvoice(models.Model):
                 ref = inv.number
 
             diff_currency = inv.currency_id != company_currency
-            # create one move line for the total and possibly adjust the other lines amount
-            total, total_currency, iml = inv.with_context(ctx).compute_invoice_totals(company_currency, iml)
+            # create one move line for the total
+            #  and possibly adjust the other lines amount
+            total, total_currency, iml = \
+                inv.with_context(ctx).compute_invoice_totals(
+                    company_currency, iml)
 
             name = inv.name or '/'
             totlines = []
@@ -930,10 +948,11 @@ class AccountInvoice(models.Model):
             for i, t in enumerate(inv.account_payment_line_ids):
 
                 if inv.currency_id != company_currency:
-                    amount_currency = company_currency.with_context(ctx).compute(t.amount_net, inv.currency_id)
+                    amount_currency = company_currency.with_context(
+                        ctx).compute(t.amount_net, inv.currency_id)
                 else:
                     amount_currency = False
-                 # last line: add the diff
+                # last line: add the diff
                 res_amount_currency -= amount_currency or 0
                 if i + 1 == len(totlines):
                     amount_currency += res_amount_currency
@@ -962,13 +981,15 @@ class AccountInvoice(models.Model):
                 })
 
             # if inv.payment_term:
-            #     totlines = inv.with_context(ctx).payment_term.compute(total, date_invoice)[0]
+            #     totlines = inv.with_context(
+            # ctx).payment_term.compute(total, date_invoice)[0]
             # if totlines:
             #     res_amount_currency = total_currency
             #     ctx['date'] = date_invoice
             #     for i, t in enumerate(totlines):
             #         if inv.currency_id != company_currency:
-            #             amount_currency = company_currency.with_context(ctx).compute(t[1], inv.currency_id)
+            #             amount_currency = company_currency.with_context(
+            # ctx).compute(t[1], inv.currency_id)
             #         else:
             #             amount_currency = False
             #
@@ -988,17 +1009,19 @@ class AccountInvoice(models.Model):
             #             'ref': ref,
             #         })
 
-            date = date_invoice
-
-            part = self.env['res.partner']._find_accounting_partner(inv.partner_id)
+            part = self.env[
+                'res.partner']._find_accounting_partner(inv.partner_id)
 
             line = [(0, 0, self.line_get_convert(l, part.id)) for l in iml]
             line = inv.group_lines(iml, line)
 
             journal = inv.journal_id.with_context(ctx)
             # if journal.centralisation:
-            #     raise UserError(_('User Error!'),
-            #             _('You cannot create an invoice on a centralized journal. Uncheck the centralized counterpart box in the related journal from the configuration menu.'))
+            #     raise UserError(
+            # _('User Error!'),
+            # ('You cannot create an invoice on a centralized journal.
+            #  Uncheck the centralized counterpart box in the related
+            #  journal from the configuration menu.'))
 
             line = inv.finalize_invoice_move_lines(line)
 
@@ -1023,20 +1046,22 @@ class AccountInvoice(models.Model):
             ctx_nolang = ctx.copy()
             ctx_nolang.pop('lang', None)
             move = account_move.with_context(ctx_nolang).create(move_vals)
-             # make the invoice point to that move
+            # make the invoice point to that move
             vals = {
                 'move_id': move.id,
                 'date': inv.date or inv.date_invoice,
                 'move_name': move.name,
             }
             inv.with_context(ctx).write(vals)
-            # Pass invoice in context in method post: used if you want to get the same
-            # account move reference when creating the same invoice after a cancelled one:
+            # Pass invoice in context in method post:
+            #  used if you want to get the same
+            # account move reference when creating the same
+            #  invoice after a cancelled one:
             move.post()
         # self._log_event()
         return True
 
-    #FIXME
+    # FIXME
     @api.multi
     def onchange_partner_id(self, type, partner_id, date_invoice=False,
                             payment_term=False, partner_bank_id=False,
@@ -1064,7 +1089,8 @@ class AccountInvoice(models.Model):
         # Busca do partner
         if partner_id and partner_id.property_payment_term_id:
             payment_term = partner_id.property_payment_term_id
-            # Sobrecreve a opção do parceiro caso a categoria fiscal tenha uma opção definida
+            # Sobrecreve a opção do parceiro caso a categoria
+            #  fiscal tenha uma opção definida
         if self.fiscal_category_id and \
                 self.fiscal_category_id.account_payment_term_id:
             payment_term = self.fiscal_category_id.account_payment_term_id

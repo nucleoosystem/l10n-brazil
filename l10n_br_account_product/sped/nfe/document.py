@@ -5,7 +5,6 @@
 from datetime import datetime
 from unicodedata import normalize
 
-from odoo import registry
 from odoo.api import Environment
 from odoo.exceptions import Warning as UserError
 from odoo.tools.translate import _
@@ -107,8 +106,8 @@ class NFe200(FiscalDocument):
         self.nfe.infNFe.ide.cNF.valor = ''
         self.nfe.infNFe.ide.natOp.valor = (
             invoice.fiscal_category_id.name[:60] or '')
-#        self.nfe.infNFe.ide.indPag.valor = (invoice.payment_term and
-#                                            invoice.payment_term.indPag or '0')
+        # self.nfe.infNFe.ide.indPag.valor = (
+        # invoice.payment_term and invoice.payment_term.indPag or '0')
         self.nfe.infNFe.ide.mod.valor = invoice.fiscal_document_id.code or ''
         self.nfe.infNFe.ide.serie.valor = invoice.document_serie_id.code or ''
         self.nfe.infNFe.ide.nNF.valor = invoice.internal_number or ''
@@ -308,7 +307,7 @@ class NFe200(FiscalDocument):
             self.nfe.infNFe.dest.CNPJ.valor = '99999999000191'
         else:
             self.nfe.infNFe.dest.xNome.valor = (normalize(
-            'NFKD', unicode(
+                'NFKD', unicode(
                     invoice.partner_id.legal_name[:60] or '')
             ).encode('ASCII', 'ignore'))
 
@@ -338,7 +337,8 @@ class NFe200(FiscalDocument):
                 invoice.partner_id.street2 or '')).encode('ASCII', 'ignore'))
         self.nfe.infNFe.dest.enderDest.xBairro.valor = (normalize(
             'NFKD', unicode(
-                invoice.partner_id.district or 'Sem Bairro')).encode('ASCII', 'ignore'))
+                invoice.partner_id.district or 'Sem Bairro')
+        ).encode('ASCII', 'ignore'))
         self.nfe.infNFe.dest.enderDest.cMun.valor = address_invoice_city_code
         self.nfe.infNFe.dest.enderDest.xMun.valor = address_invoice_city
         self.nfe.infNFe.dest.enderDest.UF.valor = address_invoice_state_code
@@ -357,16 +357,18 @@ class NFe200(FiscalDocument):
 
         if invoice_line.product_id:
             self.det.prod.cProd.valor = invoice_line.product_id.code or ''
-            self.det.prod.cEAN.valor = invoice_line.product_id.barcode or 'SEM GTIN'
-            self.det.prod.cEANTrib.valor = invoice_line.product_id.barcode or ''
+            self.det.prod.cEAN.valor =\
+                invoice_line.product_id.barcode or 'SEM GTIN'
+            self.det.prod.cEANTrib.valor =\
+                invoice_line.product_id.barcode or ''
             self.det.prod.xProd.valor = (normalize(
-            'NFKD', unicode(
+                'NFKD', unicode(
                     invoice_line.product_id.name[:120] or '')
             ).encode('ASCII', 'ignore'))
         else:
             self.det.prod.cProd.valor = invoice_line.code or ''
             self.det.prod.xProd.valor = (normalize(
-            'NFKD', unicode(
+                'NFKD', unicode(
                     invoice_line.name[:120] or '')
             ).encode('ASCII', 'ignore'))
 
@@ -555,7 +557,7 @@ class NFe200(FiscalDocument):
 
         if invoice.journal_id.revenue_expense:
             for move_line in invoice.move_line_receivable_id:
-        
+
                 if invoice.type in ('out_invoice', 'in_refund'):
                     value = move_line.debit
                 else:
@@ -876,7 +878,8 @@ class NFe400(NFe310):
         pag = self._get_DetPag()
 
         # Somente no/ PL_009_V4_2016_002_v160b
-        # pag.indPag.valor = pagamento.payment_term_id.ind_forma_pagamento or ''
+        # pag.indPag.valor =
+        # pagamento.payment_term_id.ind_forma_pagamento or ''
 
         pag.tPag.valor = pagamento.forma_pagamento
         pag.vPag.valor = str(pagamento.amount)

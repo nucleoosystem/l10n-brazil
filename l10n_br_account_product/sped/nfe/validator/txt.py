@@ -2,7 +2,6 @@
 # Copyright (C) 2012  Renato Lima - Akretion
 # License AGPL-3 - See http://www.gnu.org/licenses/agpl-3.0.html
 
-from odoo import registry
 from odoo.exceptions import Warning as UserError
 from odoo.tools.translate import _
 
