@@ -553,34 +553,33 @@ class AccountInvoice(models.Model):
     account_payment_ids = fields.One2many(
         string='Dados de Pagamento',
         comodel_name='account.invoice.payment',
-        inverse_name='invoice_id',
-    )
+        inverse_name='invoice_id')
+
     account_payment_line_ids = fields.One2many(
         string='Dados da cobrança',
         comodel_name='account.invoice.payment.line',
-        inverse_name='invoice_id',
-    )
+        inverse_name='invoice_id')
+
     amount_payment_original = fields.Float(
         string='Vr Original',
         store=True,
         digits=dp.get_precision('Account'),
         compute='_compute_amount',
-        help='vOrig'
-    )
+        help='vOrig')
+
     amount_payment_discount = fields.Float(
         string='Vr Desconto',
         store=True,
         digits=dp.get_precision('Account'),
         compute='_compute_amount',
-        help='vDesc',
-    )
+        help='vDesc')
+
     amount_payment_net = fields.Float(
         string='Vr Liquido',
         store=True,
         digits=dp.get_precision('Account'),
         compute='_compute_amount',
-        help='vLiq',
-    )
+        help='vLiq')
 
     @api.one
     @api.constrains('number')
@@ -630,6 +629,34 @@ class AccountInvoice(models.Model):
         return super(AccountInvoice, self).fields_view_get(
             view_id=view_id, view_type=view_type,
             toolbar=toolbar, submenu=submenu)
+
+    @api.multi
+    def get_taxes_values(self):
+        tax_grouped = {}
+        round_curr = self.currency_id.round
+        for line in self.invoice_line_ids:
+            price = (line.price_unit * (1 - (line.discount or 0.0) / 100.0))
+
+            taxes = line.invoice_line_tax_ids.compute_all(
+                price, self.currency_id, line.quantity,
+                partner=self.partner_id,
+                fiscal_position=line.fiscal_position_id,
+                insurance_value=line.insurance_value,
+                freight_value=line.freight_value,
+                other_costs_value=line.other_costs_value)['taxes']
+
+            for tax in taxes:
+                val = self._prepare_tax_line_vals(line, tax)
+                key = self.env['account.tax'].browse(
+                    tax['id']).get_grouping_key(val)
+
+                if key not in tax_grouped:
+                    tax_grouped[key] = val
+                    tax_grouped[key]['base'] = round_curr(val['base'])
+                else:
+                    tax_grouped[key]['amount'] += val['amount']
+                    tax_grouped[key]['base'] += round_curr(val['base'])
+        return tax_grouped
 
     # TODO Imaginar em não apagar o internal number para nao ter a necessidade
     # de voltar a numeracão
@@ -728,21 +755,20 @@ class AccountInvoice(models.Model):
                     {'internal_number': seq_number,
                      'number': seq_number,
                      'date_hour_invoice': date_time_invoice,
-                     'date_in_out': date_in_out}
-                )
+                     'date_in_out': date_in_out})
 
         self.action_payment()
         return True
 
     @api.onchange('type')
-    def onchange_type(self):
+    def _onchange_type(self):
         ctx = dict(self.env.context)
         ctx.update({'type': self.type})
         self.fiscal_category_id = (self.with_context(ctx).
                                    _default_fiscal_category())
 
     @api.onchange('fiscal_document_id')
-    def onchange_fiscal_document_id(self):
+    def _onchange_fiscal_document_id(self):
         if self.fiscal_type == 'product':
             if self.issuer == '0':
                 series = [doc_serie for doc_serie in
@@ -763,7 +789,7 @@ class AccountInvoice(models.Model):
     @api.onchange('partner_id',
                   'company_id',
                   'fiscal_category_id')
-    def onchange_fiscal(self):
+    def _onchange_fiscal(self):
         if (self.company_id and self.partner_id
                 and self.fiscal_category_id):
             if self.fiscal_category_id.property_journal:
@@ -779,8 +805,16 @@ class AccountInvoice(models.Model):
                 'company_id': self.company_id,
                 'partner_id': self.partner_id,
                 'partner_invoice_id': self.partner_id,
-                'fiscal_category_id': self.fiscal_category_id,
-            }
+                'fiscal_category_id': self.fiscal_category_id}
+
+            if self.partner_id.property_payment_term_id:
+                payment_term = partner_id.property_payment_term_id
+                # Sobrecreve a opção do parceiro caso a categoria
+                #  fiscal tenha uma opção definida
+                if self.fiscal_category_id.account_payment_term_id:
+                    payment_term = (
+                        self.fiscal_category_id.account_payment_term_id)
+                self.payment_term_id = payment_term
 
             fiscal_rule = self.env['account.fiscal.position.rule']
             fp = fiscal_rule.apply_fiscal_mapping(**kwargs)
@@ -798,63 +832,21 @@ class AccountInvoice(models.Model):
                     date_move = inv.date_in_out
                 else:
                     date_move = inv.date_hour_invoice
+
                 date_hour_invoice = fields.Datetime.context_timestamp(
                     self, datetime.datetime.strptime(
-                        date_move, tools.DEFAULT_SERVER_DATETIME_FORMAT
-                    )
-                )
+                        date_move, tools.DEFAULT_SERVER_DATETIME_FORMAT))
+
             date_invoice = date_hour_invoice.strftime(
                 tools.DEFAULT_SERVER_DATE_FORMAT)
             inv.date_invoice = date_invoice
-            inv._onchange_payment_term_date_invoice()
             date_time_now = fields.datetime.now()
             if not inv.date_hour_invoice:
                 inv.date_hour_invoice = date_time_now
             if not inv.date_in_out:
                 inv.date_in_out = date_time_now
-        return True
 
-    # TODO: Reavaliar a necessidade do método
-    # @api.multi
-    # def button_reset_taxes(self):
-    #     ait = self.env['account.invoice.tax']
-    #     for invoice in self:
-    #         invoice.read()
-    #         costs = []
-    #         company = invoice.company_id
-    #         if invoice.amount_insurance:
-    #             costs.append((company.insurance_tax_id,
-    #                           invoice.amount_insurance))
-    #         if invoice.amount_freight:
-    #             costs.append((company.freight_tax_id,
-    #                           invoice.amount_freight))
-    #         if invoice.amount_costs:
-    #             costs.append((company.other_costs_tax_id,
-    #                           invoice.amount_costs))
-    #         for tax, cost in costs:
-    #             ait_id = ait.search([
-    #                 ('invoice_id', '=', invoice.id),
-    #                 ('tax_group_id', '=', tax.tax_group_id.id),
-    #             ])
-    #             vals = {
-    #                 'tax_amount': cost,
-    #                 'name': tax.name,
-    #                 'sequence': 1,
-    #                 'invoice_id': invoice.id,
-    #                 'manual': True,
-    #                 'base_amount': cost,
-    #                 'base_code_id': tax.base_code_id.id,
-    #                 'amount': cost,
-    #                 'base': cost,
-    #                 'account_analytic_id':
-    #                     tax.account_analytic_collected_id.id or False,
-    #                 'account_id': tax.account_paid_id.id,
-    #             }
-    #             if ait_id:
-    #                 ait_id.write(vals)
-    #             else:
-    #                 ait.create(vals)
-    #     return {}
+        super(AccountInvoice, self).action_date_assign()
 
     @api.multi
     def open_fiscal_document(self):
@@ -870,12 +862,11 @@ class AccountInvoice(models.Model):
 
         for inv in self:
             if not inv.journal_id.sequence_id:
-                raise UserError(_('Error!'), _(
-                    'Please define sequence on the journal'
-                    ' related to this invoice.'))
+                raise UserError(
+                    _('Please define sequence on the journal'
+                      ' related to this invoice.'))
             if not inv.invoice_line_ids:
                 raise UserError(
-                    _('No Invoice Lines!'),
                     _('Please create some invoice lines.'))
             if inv.move_id:
                 continue
@@ -884,11 +875,10 @@ class AccountInvoice(models.Model):
 
             if not inv.date_invoice:
                 inv.with_context(ctx).write({
-                    'date_invoice': fields.Date.context_today(self)
-                })
+                    'date_invoice': fields.Date.context_today(self)})
             date_invoice = inv.date_invoice
-
             company_currency = inv.company_id.currency_id
+
             # create the analytical lines, one move line per invoice line
             iml = inv.invoice_line_move_line_get()
             # check if taxes are all computed
@@ -1061,37 +1051,10 @@ class AccountInvoice(models.Model):
         # self._log_event()
         return True
 
-    # FIXME
-    @api.multi
-    def onchange_partner_id(self, type, partner_id, date_invoice=False,
-                            payment_term=False, partner_bank_id=False,
-                            company_id=False):
-        result = super(AccountInvoice, self).onchange_partner_id(
-            type, partner_id, date_invoice, payment_term,
-            partner_bank_id, company_id
-        )
+    @api.onchange('partner_id',
+                  'company_id')
+    def _onchange_partner_id(self):
+        super(AccountInvoice, self)._onchange_partner_id()
         # Sobrescreve o compartamento padrão do core de aplicar a forma de
         # pagamento verificar metodo: onchange_fiscal_payment_term
-        if result.get('value'):
-            result['value'].pop('payment_term', None)
-        return result
-
-    @api.onchange('fiscal_category_id', 'fiscal_position_id')
-    def onchange_fiscal_payment_term(self):
-        """ Quando a posição fiscal for preenchida temos os dados da categoria
-         e do partner e então podemos tomar decidir qual o payment_term
-         adequado
-        :return:
-        """
-        partner_id = self.partner_id
-        payment_term = self.env['account.payment.term']
-
-        # Busca do partner
-        if partner_id and partner_id.property_payment_term_id:
-            payment_term = partner_id.property_payment_term_id
-            # Sobrecreve a opção do parceiro caso a categoria
-            #  fiscal tenha uma opção definida
-        if self.fiscal_category_id and \
-                self.fiscal_category_id.account_payment_term_id:
-            payment_term = self.fiscal_category_id.account_payment_term_id
-        self.payment_term_id = payment_term
+        self.payment_term = False
