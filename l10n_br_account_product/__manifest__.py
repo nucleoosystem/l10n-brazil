@@ -15,7 +15,7 @@
         'l10n_br_account',
     ],
     'data': [
-        'l10n_br_account_product_sequence.xml',
+        'data/l10n_br_account_product_sequence.xml',
         'data/l10n_br_account_product.cfop.csv',
         'data/l10n_br_account.fiscal.document.csv',
         'data/l10n_br_account_data.xml',
@@ -24,7 +24,6 @@
         'data/ir_cron.xml',
         'data/account_payment_term_data.xml',
         'data/l10n_br_account_product_cst_data.xml',
-        # 'views/l10n_br_account_product_view.xml',
         'views/l10n_br_account_fiscal_category_view.xml',
         'views/l10n_br_account_partner_fiscal_type_view.xml',
         'views/l10n_br_account_product_cfop_view.xml',
@@ -60,7 +59,7 @@
         'demo/product_demo.xml',
         'demo/l10n_br_account_product_demo.xml',
         'demo/account_fiscal_position_rule_demo.xml',
-        # 'demo/product_taxes.yml',
+        'demo/product_taxes.yml',
     ],
     'test': [
        # 'test/account_customer_invoice.yml',
