@@ -5,7 +5,7 @@
 from datetime import datetime
 from unicodedata import normalize
 
-from odoo.api import Environment
+# from odoo.api import Environment
 from odoo.exceptions import Warning as UserError
 from odoo.tools.translate import _
 
@@ -26,18 +26,18 @@ class NFe200(FiscalDocument):
         self.det = None
         self.dup = None
 
-    def _serializer(self, cr, uid, ids, nfe_environment, context=None):
+    def _serializer(self, nfe_environment):
 
         nfes = []
 
-        env = Environment(cr, uid, context)
+        # env = Environment(cr, uid, context)
 
-        if not context:
-            context = {'lang': 'pt_BR'}
+        # if not self.env.context:
+        #    context = {'lang': 'pt_BR'}
 
-        for invoice in env['account.invoice'].browse(ids):
+        for invoice in self:
 
-            company = env['res.partner'].browse(
+            company = self.env['res.partner'].browse(
                 invoice.company_id.partner_id.id)
 
             self.nfe = self.get_NFe()
@@ -745,10 +745,10 @@ class NFe200(FiscalDocument):
 
         return Dup_200()
 
-    def get_xml(self, cr, uid, ids, nfe_environment, context=None):
+    def get_xml(self, nfe_environment):
         """"""
         result = []
-        for nfe in self._serializer(cr, uid, ids, nfe_environment, context):
+        for nfe in self._serializer(nfe_environment):
             result.append({'key': nfe.infNFe.Id.valor, 'nfe': nfe.get_xml()})
         return result
 
