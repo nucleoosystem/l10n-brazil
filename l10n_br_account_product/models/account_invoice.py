@@ -18,7 +18,7 @@ from ..sped.nfe.validator import txt
 
 class AccountInvoice(models.Model):
     _inherit = 'account.invoice'
-    _order = 'date_hour_invoice DESC, internal_number DESC'
+    _order = 'date_hour_invoice DESC, fiscal_number DESC'
 
     @api.one
     @api.depends('invoice_line_ids.price_subtotal', 'tax_line_ids.amount',
@@ -163,11 +163,11 @@ class AccountInvoice(models.Model):
         readonly=True,
         states={'draft': [('readonly', False)]})
 
-    # FIXME
-    internal_number = fields.Char(
-        string='Invoice Number',
+    fiscal_number = fields.Char(
+        string='Fiscal Number',
         size=32,
         readonly=True,
+        copy=False,
         states={'draft': [('readonly', False)]},
         help="""Unique number of the invoice, computed
             automatically when the invoice is created.""")
@@ -588,14 +588,14 @@ class AccountInvoice(models.Model):
         if self.number:
             fiscal_document = self.fiscal_document_id and\
                 self.fiscal_document_id.id or False
-            domain.extend([('internal_number', '=', self.number),
+            domain.extend([('fiscal_number', '=', self.number),
                            ('fiscal_type', '=', self.fiscal_type),
                            ('fiscal_document_id', '=', fiscal_document)
                            ])
             if self.issuer == '0':
                 domain.extend([
                     ('company_id', '=', self.company_id.id),
-                    ('internal_number', '=', self.number),
+                    ('fiscal_number', '=', self.number),
                     ('fiscal_document_id', '=', self.fiscal_document_id.id),
                     ('issuer', '=', '0')])
             else:
@@ -661,14 +661,24 @@ class AccountInvoice(models.Model):
     # TODO Imaginar em não apagar o internal number para nao ter a necessidade
     # de voltar a numeracão
     @api.multi
-    def action_cancel_draft(self):
-        result = super(AccountInvoice, self).action_cancel_draft()
+    def action_invoice_draft(self):
+        result = super(AccountInvoice, self).action_invoice_draft()
         self.write({
-            'internal_number': False,
+            'fiscal_number': False,
             'nfe_access_key': False,
             'nfe_status': False,
             'nfe_date': False,
             'nfe_export_date': False})
+        return result
+
+    @api.multi
+    def action_invoice_open(self):
+        self.action_number()
+        self.nfe_check()
+        result = super(AccountInvoice, self).action_invoice_open()
+        for invoice in self:
+            if invoice.fiscal_document_electronic:
+                invoice.write({'state': 'sefaz_export'})
         return result
 
     @api.multi
@@ -711,8 +721,8 @@ class AccountInvoice(models.Model):
                 #
                 raise UserError(
                     _(u'O total de pagamentos deve ser maior ou igual '
-                      u'ao total da nota.\n'),
-                    _(u'Resta realizar o pagamento de %0.2f'
+                      u'ao total da nota.\n'
+                      u'Resta realizar o pagamento de %0.2f'
                       % invoice.amount_change)
                 )
             else:
@@ -752,12 +762,12 @@ class AccountInvoice(models.Model):
                                      fields.datetime.now())
                 date_in_out = invoice.date_in_out or fields.datetime.now()
                 self.write(
-                    {'internal_number': seq_number,
+                    {'fiscal_number': seq_number,
                      'number': seq_number,
                      'date_hour_invoice': date_time_invoice,
                      'date_in_out': date_in_out})
 
-        self.action_payment()
+        # self.action_payment()
         return True
 
     @api.onchange('type')
@@ -855,9 +865,9 @@ class AccountInvoice(models.Model):
         result['name'] = _('NF-e')
         return result
 
-    @api.multi
+    """@api.multi
     def action_move_create(self):
-        """ Creates invoice related analytics and financial move lines """
+        # Creates invoice related analytics and financial move lines
         account_move = self.env['account.move']
 
         for inv in self:
@@ -1049,7 +1059,7 @@ class AccountInvoice(models.Model):
             #  invoice after a cancelled one:
             move.post()
         # self._log_event()
-        return True
+        return True"""
 
     @api.onchange('partner_id',
                   'company_id')
