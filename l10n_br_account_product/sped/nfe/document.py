@@ -5,7 +5,6 @@
 from datetime import datetime
 from unicodedata import normalize
 
-from odoo.api import Environment
 from odoo.exceptions import Warning as UserError
 from odoo.tools.translate import _
 
@@ -26,19 +25,13 @@ class NFe200(FiscalDocument):
         self.det = None
         self.dup = None
 
-    def _serializer(self, nfe_environment):
+    def _serializer(self, invoices, nfe_environment):
 
         nfes = []
 
-        # env = Environment(cr, uid, context)
+        for invoice in invoices:
 
-        # if not self.env.context:
-        #    context = {'lang': 'pt_BR'}
-
-        for invoice in self:
-
-            company = self.env['res.partner'].browse(
-                invoice.company_id.partner_id.id)
+            company = invoice.company_id.partner_id
 
             self.nfe = self.get_NFe()
 
@@ -121,7 +114,7 @@ class NFe200(FiscalDocument):
         self.nfe.infNFe.ide.tpAmb.valor = nfe_environment
         self.nfe.infNFe.ide.finNFe.valor = invoice.nfe_purpose
         self.nfe.infNFe.ide.procEmi.valor = 0
-        self.nfe.infNFe.ide.verProc.valor = 'Odoo Brasil v8'
+        self.nfe.infNFe.ide.verProc.valor = 'Odoo Brasil v12.0'
         self.nfe.infNFe.compra.xPed.valor = invoice.name or ''
 
         if invoice.cfop_ids[0].type in ("input"):
@@ -689,7 +682,7 @@ class NFe200(FiscalDocument):
             from pysped.nfe.leiaute import NFe_200
         except ImportError:
             raise UserError(
-                _(u'Erro!'), _(u"Biblioteca PySPED não instalada!"))
+                _(u"Biblioteca PySPED não instalada!"))
 
         return NFe_200()
 
@@ -698,7 +691,7 @@ class NFe200(FiscalDocument):
             from pysped.nfe.leiaute import NFRef_200
         except ImportError:
             raise UserError(
-                _(u'Erro!'), _(u"Biblioteca PySPED não instalada!"))
+                _(u"Biblioteca PySPED não instalada!"))
 
         return NFRef_200()
 
@@ -707,7 +700,7 @@ class NFe200(FiscalDocument):
             from pysped.nfe.leiaute import Det_200
         except ImportError:
             raise UserError(
-                _(u'Erro!'), _(u"Biblioteca PySPED não instalada!"))
+                _(u"Biblioteca PySPED não instalada!"))
 
         return Det_200()
 
@@ -716,7 +709,7 @@ class NFe200(FiscalDocument):
             from pysped.nfe.leiaute import DI_200
         except ImportError:
             raise UserError(
-                _(u'Erro!'), _(u"Biblioteca PySPED não instalada!"))
+                _(u"Biblioteca PySPED não instalada!"))
         return DI_200()
 
     def _get_Addition(self):
@@ -724,7 +717,7 @@ class NFe200(FiscalDocument):
             from pysped.nfe.leiaute import Adi_200
         except ImportError:
             raise UserError(
-                _(u'Erro!'), _(u"Biblioteca PySPED não instalada!"))
+                _(u"Biblioteca PySPED não instalada!"))
         return Adi_200()
 
     def _get_Vol(self):
@@ -732,7 +725,7 @@ class NFe200(FiscalDocument):
             from pysped.nfe.leiaute import Vol_200
         except ImportError:
             raise UserError(
-                _(u'Erro!'), _(u"Biblioteca PySPED não instalada!"))
+                _(u"Biblioteca PySPED não instalada!"))
         return Vol_200()
 
     def _get_Dup(self):
@@ -741,14 +734,14 @@ class NFe200(FiscalDocument):
             from pysped.nfe.leiaute import Dup_200
         except ImportError:
             raise UserError(
-                _(u'Erro!'), _(u"Biblioteca PySPED não instalada!"))
+                _(u"Biblioteca PySPED não instalada!"))
 
         return Dup_200()
 
-    def get_xml(self, nfe_environment):
+    def get_xml(self, invoices, nfe_environment):
         """"""
         result = []
-        for nfe in self._serializer(nfe_environment):
+        for nfe in self._serializer(invoices, nfe_environment):
             result.append({'key': nfe.infNFe.Id.valor, 'nfe': nfe.get_xml()})
         return result
 
@@ -814,7 +807,7 @@ class NFe310(NFe200):
             from pysped.nfe.leiaute import NFe_310
         except ImportError:
             raise UserError(
-                _(u'Erro!'), _(u"Biblioteca PySPED não instalada!"))
+                _(u"Biblioteca PySPED não instalada!"))
 
         return NFe_310()
 
@@ -823,7 +816,7 @@ class NFe310(NFe200):
             from pysped.nfe.leiaute import NFRef_310
         except ImportError:
             raise UserError(
-                _(u'Erro!'), _(u"Biblioteca PySPED não instalada!"))
+                _(u"Biblioteca PySPED não instalada!"))
 
         return NFRef_310()
 
@@ -832,7 +825,7 @@ class NFe310(NFe200):
             from pysped.nfe.leiaute import Det_310
         except ImportError:
             raise UserError(
-                _(u'Erro!'), _(u"Biblioteca PySPED não instalada!"))
+                _(u"Biblioteca PySPED não instalada!"))
 
         return Det_310()
 
@@ -841,7 +834,7 @@ class NFe310(NFe200):
             from pysped.nfe.leiaute import Dup_310
         except ImportError:
             raise UserError(
-                _(u'Erro!'), _(u"Biblioteca PySPED não instalada!"))
+                _(u"Biblioteca PySPED não instalada!"))
 
         return Dup_310()
 
@@ -850,7 +843,7 @@ class NFe310(NFe200):
             from pysped.nfe.leiaute import DI_310
         except ImportError:
             raise UserError(
-                _(u'Erro!'), _(u"Biblioteca PySPED não instalada!"))
+                _(u"Biblioteca PySPED não instalada!"))
         return DI_310()
 
     def _get_AutXML(self):
@@ -858,7 +851,7 @@ class NFe310(NFe200):
             from pysped.nfe.leiaute import AutXML_310
         except ImportError:
             raise UserError(
-                _(u'Erro!'), _(u"Biblioteca PySPED não instalada!"))
+                _(u"Biblioteca PySPED não instalada!"))
         return AutXML_310()
 
 
@@ -916,7 +909,7 @@ class NFe400(NFe310):
             from pysped.nfe.leiaute import NFe_400
         except ImportError:
             raise UserError(
-                _(u'Erro!'), _(u"Biblioteca PySPED não instalada!"))
+                _(u"Biblioteca PySPED não instalada!"))
 
         return NFe_400()
 
@@ -925,7 +918,7 @@ class NFe400(NFe310):
             from pysped.nfe.leiaute import NFRef_400
         except ImportError:
             raise UserError(
-                _(u'Erro!'), _(u"Biblioteca PySPED não instalada!"))
+                _(u"Biblioteca PySPED não instalada!"))
 
         return NFRef_400()
 
@@ -934,7 +927,7 @@ class NFe400(NFe310):
             from pysped.nfe.leiaute import Det_400
         except ImportError:
             raise UserError(
-                _(u'Erro!'), _(u"Biblioteca PySPED não instalada!"))
+                _(u"Biblioteca PySPED não instalada!"))
         return Det_400()
 
     def _get_Dup(self):
@@ -942,7 +935,7 @@ class NFe400(NFe310):
             from pysped.nfe.leiaute import Dup_400
         except ImportError:
             raise UserError(
-                _(u'Erro!'), _(u"Biblioteca PySPED não instalada!"))
+                _(u"Biblioteca PySPED não instalada!"))
         return Dup_400()
 
     def _get_DI(self):
@@ -950,7 +943,7 @@ class NFe400(NFe310):
             from pysped.nfe.leiaute import DI_400
         except ImportError:
             raise UserError(
-                _(u'Erro!'), _(u"Biblioteca PySPED não instalada!"))
+                _(u"Biblioteca PySPED não instalada!"))
         return DI_400()
 
     def _get_Pag(self):
@@ -958,7 +951,7 @@ class NFe400(NFe310):
             from pysped.nfe.leiaute import Pag_400
         except ImportError:
             raise UserError(
-                _(u'Erro!'), _(u"Biblioteca PySPED não instalada!"))
+                _(u"Biblioteca PySPED não instalada!"))
         return Pag_400()
 
     def _get_DetPag(self):
@@ -966,7 +959,7 @@ class NFe400(NFe310):
             from pysped.nfe.leiaute import DetPag_400
         except ImportError:
             raise UserError(
-                _(u'Erro!'), _(u"Biblioteca PySPED não instalada!"))
+                _(u"Biblioteca PySPED não instalada!"))
         return DetPag_400()
 
     def _get_AutXML(self):
@@ -974,5 +967,5 @@ class NFe400(NFe310):
             from pysped.nfe.leiaute import AutXML_400
         except ImportError:
             raise UserError(
-                _(u'Erro!'), _(u"Biblioteca PySPED não instalada!"))
+                _(u"Biblioteca PySPED não instalada!"))
         return AutXML_400()
