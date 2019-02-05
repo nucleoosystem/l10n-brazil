@@ -196,10 +196,7 @@ class AccountTax(models.Model):
         # Calcula o IPI
         specific_ipi = [tx for tx in result['taxes'] if tx['domain'] == 'ipi']
 
-        if id_dest == '3':
-            base_ipi = total_base
-        else:
-            base_ipi = result['total']
+        base_ipi = total_base
 
         result_ipi = self._compute_tax(cr, uid, specific_ipi, base_ipi,
                                        product, quantity, precision, base_tax)
@@ -215,7 +212,7 @@ class AccountTax(models.Model):
                            if tx['domain'] == 'cofins']
 
         if id_dest == '3':
-            base_pis_cofins = total_base - ii_value - ipi_value
+            base_pis_cofins = result['total'] - ii_value
         else:
             base_pis_cofins = result['total']
 
