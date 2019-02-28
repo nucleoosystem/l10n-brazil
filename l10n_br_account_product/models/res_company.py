@@ -86,6 +86,9 @@ class ResCompany(models.Model):
         string=u'Data usada na criação de Vencimentos na NFe de Saída.',
         default='invoice_creation_date'
     )
+    pis_cofins_less_icms = fields.Boolean(
+        string="Remover ICMS da base do PIS/COFINS",
+        default=False)
 
 
 class L10nBrTaxDefinitionCompanyProduct(L10nBrTaxDefinition, models.Model):

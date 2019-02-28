@@ -207,31 +207,6 @@ class AccountTax(models.Model):
         calculed_taxes += result_ipi['taxes']
         ipi_value = sum(ipi['amount'] for ipi in result_ipi['taxes'])
 
-        # Calcula PIS e COFINS
-        specific_pis = [tx for tx in result['taxes']
-                        if tx['domain'] == 'pis']
-
-        specific_cofins = [tx for tx in result['taxes']
-                           if tx['domain'] == 'cofins']
-
-        base_pis_cofins = total_base
-        
-        result_pis = self._compute_tax(cr, uid, specific_pis, base_pis_cofins,
-                                       product, quantity, precision, base_tax)
-
-        totaldc += result_pis['tax_discount']
-        calculed_taxes += result_pis['taxes']
-        pis_value = sum(pis['amount'] for pis in result_pis['taxes'])
-
-        result_cofins = self._compute_tax(cr, uid, specific_cofins,
-                                          base_pis_cofins, product, quantity,
-                                          precision, base_tax)
-
-        totaldc += result_cofins['tax_discount']
-        calculed_taxes += result_cofins['taxes']
-        cofins_value = sum(cofins['amount'] for
-                           cofins in result_cofins['taxes'])
-
         # Calcula ICMS
         specific_icms = [tx for tx in result['taxes']
                          if tx['domain'] == 'icms']
@@ -241,8 +216,7 @@ class AccountTax(models.Model):
             total_base += ipi_value
 
         if id_dest == '3':
-            base_icms = (total_base + ii_value + ipi_value +
-                         pis_value + cofins_value)
+            base_icms = (total_base + ii_value + ipi_value)
 
             # Calcupa o própio ICMS
             if specific_icms:
@@ -264,6 +238,35 @@ class AccountTax(models.Model):
         calculed_taxes += result_icms['taxes']
         if result_icms['taxes']:
             icms_value = result_icms['taxes'][0]['amount']
+
+        # Calcula PIS e COFINS
+        specific_pis = [tx for tx in result['taxes']
+                        if tx['domain'] == 'pis']
+
+        specific_cofins = [tx for tx in result['taxes']
+                           if tx['domain'] == 'cofins']
+
+        if fiscal_position.company_id.pis_cofins_less_icms:
+            base_pis_cofins = total_base - icms_value
+        else:
+            base_pis_cofins = total_base
+    
+        result_pis = self._compute_tax(cr, uid, specific_pis, base_pis_cofins,
+                                       product, quantity, precision, base_tax)
+
+        totaldc += result_pis['tax_discount']
+        calculed_taxes += result_pis['taxes']
+        pis_value = sum(pis['amount'] for pis in result_pis['taxes'])
+
+        result_cofins = self._compute_tax(cr, uid, specific_cofins,
+                                          base_pis_cofins, product, quantity,
+                                          precision, base_tax)
+
+        totaldc += result_cofins['tax_discount']
+        calculed_taxes += result_cofins['taxes']
+        cofins_value = sum(cofins['amount'] for
+                           cofins in result_cofins['taxes'])
+        
 
         # Calcula ICMS Interestadual (DIFAL)
         specific_icms_inter = [tx for tx in result['taxes']

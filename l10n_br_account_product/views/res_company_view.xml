@@ -36,6 +36,10 @@
                                 </group>
                             </page>
                             <page string="Impostos">
+                                <separator colspan="4" string="Opções Tributárias"/>
+                                <group>
+                                    <field name="pis_cofins_less_icms"/>
+                                </group>
                                 <separator colspan="4" string="Impostos sobre Produtos" />
                                 <field colspan="2" nolabel="1" widget="one2many_list"   name="product_tax_definition_line" />
                             </page>
