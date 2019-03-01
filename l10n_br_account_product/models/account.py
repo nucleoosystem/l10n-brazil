@@ -141,10 +141,14 @@ class AccountTax(models.Model):
         ipi_value = 0.0
         calculed_taxes = []
         id_dest = u''
+        pis_cofins_less_icms = False
 
         if fiscal_position:
             id_dest = (fiscal_position.cfop_id and
                        fiscal_position.cfop_id.id_dest or False)
+
+        if product and product.company_id:
+            pis_cofins_less_icms = product.company_id.pis_cofins_less_icms
 
         for tax in result['taxes']:
             tax_list = [tx for tx in taxes if tx.id == tax['id']]
@@ -246,7 +250,7 @@ class AccountTax(models.Model):
         specific_cofins = [tx for tx in result['taxes']
                            if tx['domain'] == 'cofins']
 
-        if fiscal_position.company_id.pis_cofins_less_icms:
+        if pis_cofins_less_icms:
             base_pis_cofins = total_base - icms_value
         else:
             base_pis_cofins = total_base
