@@ -8,7 +8,7 @@ from odoo.tools.translate import _
 # TODO migrate
 
 
-def validate(invoices, context={}):
+def validate(invoices, context=None):
     strErro = u''
 
     for inv in invoices:
