@@ -44,8 +44,6 @@
         'views/account_product_fiscal_classification_view.xml',
         'views/product_template_view.xml',
         'views/res_country_view.xml',
-        'views/account_invoice_payment.xml',
-        'views/account_invoice_payment_line.xml',
         'wizard/l10n_br_account_nfe_export_invoice_view.xml',
         'wizard/l10n_br_account_nfe_export_view.xml',
         'wizard/l10n_br_account_document_status_sefaz_view.xml',
