@@ -128,7 +128,7 @@ class L10nBrAccountNfeExportInvoice(models.TransientModel):
                         inv.nfe_version)
 
             for nfe in nfes:
-                nfe_file = nfe['nfe'].encode('utf8')
+                nfe_file = nfe['nfe']
 
             data.write({
                 'file': base64.b64encode(nfe_file),
@@ -143,7 +143,7 @@ class L10nBrAccountNfeExportInvoice(models.TransientModel):
             'l10n_br_account_product.'
             'l10n_br_account_product_nfe_export_invoice_form')
 
-        view_id = view_rec and view_rec[1] or False
+        view_id = view_rec and view_rec.id or False
 
         return {
             'view_type': 'form',
