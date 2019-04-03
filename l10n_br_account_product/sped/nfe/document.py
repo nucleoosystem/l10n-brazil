@@ -30,7 +30,6 @@ class NFe200(FiscalDocument):
         nfes = []
 
         for invoice in invoices:
-
             company = invoice.company_id.partner_id
 
             self.nfe = self.get_NFe()
@@ -103,7 +102,7 @@ class NFe200(FiscalDocument):
         # invoice.payment_term and invoice.payment_term.indPag or '0')
         self.nfe.infNFe.ide.mod.valor = invoice.fiscal_document_id.code or ''
         self.nfe.infNFe.ide.serie.valor = invoice.document_serie_id.code or ''
-        self.nfe.infNFe.ide.nNF.valor = invoice.internal_number or ''
+        self.nfe.infNFe.ide.nNF.valor = invoice.fiscal_number or ''
         self.nfe.infNFe.ide.dEmi.valor = invoice.date_invoice or ''
         self.nfe.infNFe.ide.dSaiEnt.valor = datetime.strptime(
             invoice.date_in_out, '%Y-%m-%d %H:%M:%S').date() or ''
@@ -861,10 +860,8 @@ class NFe400(NFe310):
 
     def _details_pag(self, invoice, pag):
 
-        for pagamento in invoice.account_payment_ids:
-            pag.detPag.append(self._payment_date(pagamento))
-
-        pag.vTroco.valor = str("%.2f" % invoice.amount_change)
+        # TODO - implementar campo
+        pag.vTroco.valor = ''
 
     def _payment_date(self, pagamento):
 
@@ -888,21 +885,21 @@ class NFe400(NFe310):
     def _encashment_data(self, invoice, cobr):
         """Dados de Cobrança"""
 
-        if FORMA_PAGAMENTO_SEM_PAGAMENTO in \
-                invoice.account_payment_ids.mapped('forma_pagamento'):
-            return
+        # if FORMA_PAGAMENTO_SEM_PAGAMENTO in \
+        #        invoice.account_payment_ids.mapped('forma_pagamento'):
+        #    return
 
         cobr.fat.nFat.valor = invoice.number
-        cobr.fat.vOrig.valor = str("%.2f" % invoice.amount_payment_original)
-        cobr.fat.vDesc.valor = str("%.2f" % invoice.amount_payment_discount)
-        cobr.fat.vLiq.valor = str("%.2f" % invoice.amount_payment_net)
+        # cobr.fat.vOrig.valor = str("%.2f" % invoice.amount_payment_original)
+        # cobr.fat.vDesc.valor = str("%.2f" % invoice.amount_payment_discount)
+        # cobr.fat.vLiq.valor = str("%.2f" % invoice.amount_payment_net)
 
-        for payment_line in invoice.account_payment_line_ids:
-            dup = self._get_Dup()
-            dup.nDup.valor = payment_line.number
-            dup.dVenc.valor = payment_line.date_due
-            dup.vDup.valor = str("%.2f" % payment_line.amount_net)
-            cobr.dup.append(dup)
+        # for payment_line in invoice.account_payment_line_ids:
+        #    dup = self._get_Dup()
+        #    dup.nDup.valor = payment_line.number
+        #    dup.dVenc.valor = payment_line.date_due
+        #    dup.vDup.valor = str("%.2f" % payment_line.amount_net)
+        #    cobr.dup.append(dup)
 
     def get_NFe(self):
         try:
