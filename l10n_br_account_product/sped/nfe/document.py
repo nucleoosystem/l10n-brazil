@@ -13,7 +13,6 @@ from odoo.addons.l10n_br_base.tools.misc import punctuation_rm
 
 from ...models.account_invoice_term import (
     FORMA_PAGAMENTO_CARTOES,
-    FORMA_PAGAMENTO_SEM_PAGAMENTO,
 )
 
 
